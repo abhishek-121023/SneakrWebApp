@@ -1,3 +1,5 @@
+"use client"
+
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import Image from "next/image"
@@ -6,17 +8,19 @@ import { ArrowRight, ShoppingBag, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { getFeaturedProducts } from "@/lib/products"
+import { ScrollReveal } from "@/components/scroll-reveal"
 
 export default function Home() {
-  const featuredProducts = getFeaturedProducts(4)
+  const featuredProducts = getFeaturedProducts(6)
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="w-full py-16 md:py-24 lg:py-32 hero-gradient overflow-hidden">
+      <section className="w-full min-h-screen py-16 md:py-24 lg:py-32 hero-gradient overflow-hidden flex items-center" 
+      style={{ background: 'transparent' }}>
         <div className="container px-4 md:px-6 relative">
           <div className="absolute inset-0 bg-hero-pattern opacity-10"></div>
-          <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center relative">
+          <div className="grid lg:grid-cols-2 gap-8 items-center">
             <div className="flex flex-col justify-center space-y-4 animate-fade-in">
               <div className="space-y-2">
                 <Badge variant="outline" className="border-primary text-primary bg-primary/10 backdrop-blur-sm">
@@ -47,16 +51,20 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-            <div className="relative lg:ml-10 animate-float">
-              <div className="absolute -inset-4 rounded-full bg-primary/20 blur-3xl animate-pulse-glow"></div>
-              <Image
-                src="/images/nike-travis-scott.png"
-                alt="Featured Sneaker"
-                width={600}
-                height={600}
-                className="mx-auto object-cover rounded-xl relative z-10"
-                priority
-              />
+            
+            <div className="relative lg:ml-10 sneaker-3d-container">
+              <div className="absolute -inset-4 rounded-full bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30 blur-3xl animate-pulse-slow"></div>
+              <div className="sneaker-3d-wrapper">
+                <Image
+                  src="/images/nike-travis-scott.png"
+                  alt="Featured Sneaker"
+                  width={600}
+                  height={600}
+                  className="sneaker-3d"
+                  priority
+                />
+                <div className="sneaker-shadow"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -65,60 +73,48 @@ export default function Home() {
       {/* Featured Products */}
       <section className="section bg-background">
         <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2 max-w-3xl">
-              <h2 className="section-title">FEATURED SNEAKERS</h2>
-              <p className="text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Our most popular styles, handpicked for you
-              </p>
+          <ScrollReveal>
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="space-y-2 max-w-3xl">
+                <h2 className="section-title">FEATURED SNEAKERS</h2>
+                <p className="text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                  Our most popular styles, handpicked for you
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="product-grid mt-12">
-            {featuredProducts.map((product) => (
-              <Link key={product.id} href={`/products/${product.id}`} className="product-card group">
-                <div className="relative overflow-hidden rounded-xl">
+          </ScrollReveal>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16">
+            {featuredProducts.map((product, index) => (
+              <ScrollReveal key={product.id} delay={index * 200}>
+                <Link 
+                  href={`/products/${product.id}`} 
+                  className="product-card-large"
+                >
                   <Image
                     src={product.image || "/placeholder.svg"}
                     alt={product.name}
-                    width={400}
-                    height={400}
-                    className="product-image object-cover w-full aspect-square"
+                    width={800}
+                    height={800}
+                    className="product-image"
                   />
-                  {product.isNew && <Badge className="badge-new absolute top-2 right-2">New</Badge>}
-                  <div className="product-actions">
-                    <Button className="w-full">Add to Cart</Button>
-                  </div>
-                </div>
-                <div className="p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="product-title group-hover:text-primary transition-colors">{product.name}</h3>
-                    <div className="rating-stars">
-                      <Star className="star-filled w-4 h-4" />
-                      <span className="ml-1 text-sm text-muted-foreground">{product.rating}</span>
+                  <div className="product-overlay" />
+                  <div className="product-content">
+                    <Badge variant="outline" className="mb-4 border-white/20 text-white bg-white/10 backdrop-blur-sm">
+                      {product.category}
+                    </Badge>
+                    <h3 className="text-3xl font-heading text-white mb-2">{product.name}</h3>
+                    <p className="text-lg text-white/80 mb-4">{product.brand}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-2xl font-heading text-white">${product.price.toFixed(2)}</p>
+                      <div className="flex items-center gap-2">
+                        <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                        <span className="text-white/90">{product.rating}</span>
+                      </div>
                     </div>
                   </div>
-                  <p className="text-muted-foreground">{product.brand}</p>
-                  <div className="flex items-center justify-between">
-                    <p className="price-text">${product.price.toFixed(2)}</p>
-                    <Button size="sm" variant="ghost" className="rounded-full p-0 w-9 h-9 hover:bg-primary/20">
-                      <ShoppingBag className="h-4 w-4" />
-                      <span className="sr-only">Add to cart</span>
-                    </Button>
-                  </div>
-                </div>
-              </Link>
+                </Link>
+              </ScrollReveal>
             ))}
-          </div>
-          <div className="flex justify-center mt-12">
-            <Link href="/products">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-              >
-                View All Products
-              </Button>
-            </Link>
           </div>
         </div>
       </section>
@@ -126,28 +122,35 @@ export default function Home() {
       {/* Categories */}
       <section className="section bg-secondary">
         <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2 max-w-3xl">
-              <h2 className="section-title">SHOP BY CATEGORY</h2>
-              <p className="text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Find your perfect pair in our curated collections
-              </p>
+          <ScrollReveal>
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="space-y-2 max-w-3xl">
+                <h2 className="section-title">SHOP BY CATEGORY</h2>
+                <p className="text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                  Find your perfect pair in our curated collections
+                </p>
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-            {categories.map((category) => (
-              <Link key={category.id} href={`/categories/${category.slug}`} className="category-card group">
-                <Image
-                  src={category.image || "/placeholder.svg"}
-                  alt={category.name}
-                  width={400}
-                  height={300}
-                  className="object-cover w-full aspect-[4/3] transition-transform duration-500"
-                />
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                  <h3 className="text-white text-2xl font-bold">{category.name}</h3>
-                </div>
-              </Link>
+            {categories.map((category, index) => (
+              <ScrollReveal key={category.id} delay={index * 200}>
+                <Link 
+                  href={`/categories/${category.slug}`} 
+                  className="category-card group"
+                >
+                  <Image
+                    src={category.image || "/placeholder.svg"}
+                    alt={category.name}
+                    width={400}
+                    height={300}
+                    className="object-cover w-full aspect-[4/3] transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <h3 className="text-white text-2xl font-bold">{category.name}</h3>
+                  </div>
+                </Link>
+              </ScrollReveal>
             ))}
           </div>
         </div>
