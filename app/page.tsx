@@ -6,7 +6,6 @@ import { ArrowRight, ShoppingBag, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { getFeaturedProducts } from "@/lib/products"
-import { AnimatedLogo, ArtisticLogo } from "@/components/logo"
 
 export default function Home() {
   const featuredProducts = getFeaturedProducts(4)
@@ -58,23 +57,6 @@ export default function Home() {
                 className="mx-auto object-cover rounded-xl relative z-10"
                 priority
               />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Logo Showcase */}
-      <section className="py-16 bg-secondary">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-8">
-            <h2 className="font-heading text-2xl md:text-3xl text-center">OUR BRAND</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-              <div className="flex justify-center">
-                <AnimatedLogo />
-              </div>
-              <div className="flex justify-center">
-                <ArtisticLogo />
-              </div>
             </div>
           </div>
         </div>
@@ -172,7 +154,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="section bg-muted">
+      <section className="section bg-background">
         <div className="container px-4 md:px-6">
           <div className="grid gap-12 md:grid-cols-3">
             <div className="flex flex-col items-center text-center space-y-4">

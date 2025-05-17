@@ -3,15 +3,16 @@ import { Facebook, Instagram, Twitter, Youtube } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Logo } from "@/components/logo"
 
 export default function Footer() {
   return (
-    <footer className="bg-secondary text-secondary-foreground">
+    <footer className="bg-secondary">
       <div className="container px-4 py-12 md:px-6 md:py-16 lg:py-20">
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
           <div className="lg:col-span-2">
-            <Logo withTagline asLink={true} />
+            <Link href="/" className="brand-logo text-gradient">
+              SNEAKR
+            </Link>
             <p className="mt-4 text-muted-foreground max-w-xs">
               Discover the latest in sneaker innovation. Limited editions, exclusive drops, and timeless classics.
             </p>

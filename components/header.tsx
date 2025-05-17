@@ -10,7 +10,6 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/s
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
 import { CartSheet } from "@/components/cart-sheet"
-import { Logo } from "@/components/logo"
 
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -37,7 +36,7 @@ export default function Header() {
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         isScrolled
-          ? "bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b shadow-sm"
+          ? "bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b"
           : "bg-transparent"
       }`}
     >
@@ -51,11 +50,9 @@ export default function Header() {
           </SheetTrigger>
           <SheetContent side="left" className="w-[300px] sm:w-[400px] bg-background">
             <nav className="flex flex-col gap-6">
-              <SheetClose asChild>
-                <Link href="/">
-                  <Logo asLink={false} />
-                </Link>
-              </SheetClose>
+              <Link href="/" className="text-2xl font-bold text-gradient" passHref>
+                <SheetClose>SNEAKR</SheetClose>
+              </Link>
               <div className="space-y-3">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">Shop</p>
                 <div className="space-y-3 pl-1">
@@ -108,7 +105,7 @@ export default function Header() {
         </Sheet>
 
         <Link href="/" className="mr-6 flex items-center space-x-2">
-          <Logo asLink={false} />
+          <span className="brand-logo text-gradient">SNEAKR</span>
         </Link>
 
         <nav className="hidden md:flex items-center space-x-8">

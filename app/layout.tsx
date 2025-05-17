@@ -28,7 +28,6 @@ export const metadata: Metadata = {
   description:
     "Discover the latest in sneaker innovation. Limited editions, exclusive drops, and timeless classics from Nike, Adidas, Jordan and more.",
   keywords: "sneakers, shoes, Nike, Adidas, Jordan, running shoes, basketball shoes, limited edition sneakers",
-  themeColor: "#ff4d1d", // This matches our new primary color (16 90% 50%)
     generator: 'v0.dev'
 }
 
