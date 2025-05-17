@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import Image from "next/image"
@@ -9,9 +10,25 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { getFeaturedProducts } from "@/lib/products"
 import { ScrollReveal } from "@/components/scroll-reveal"
+import type { Product } from "@/lib/products"
 
 export default function Home() {
-  const featuredProducts = getFeaturedProducts(6)
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      // Fetch products on client side
+      const products = getFeaturedProducts(6)
+      setFeaturedProducts(products)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load products')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -83,39 +100,68 @@ export default function Home() {
               </div>
             </div>
           </ScrollReveal>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16">
-            {featuredProducts.map((product, index) => (
-              <ScrollReveal key={product.id} delay={index * 200}>
-                <Link 
-                  href={`/products/${product.id}`} 
-                  className="product-card-large"
-                >
-                  <Image
-                    src={product.image || "/placeholder.svg"}
-                    alt={product.name}
-                    width={800}
-                    height={800}
-                    className="product-image"
-                  />
-                  <div className="product-overlay" />
-                  <div className="product-content">
-                    <Badge variant="outline" className="mb-4 border-white/20 text-white bg-white/10 backdrop-blur-sm">
-                      {product.category}
-                    </Badge>
-                    <h3 className="text-3xl font-heading text-white mb-2">{product.name}</h3>
-                    <p className="text-lg text-white/80 mb-4">{product.brand}</p>
-                    <div className="flex items-center justify-between">
-                      <p className="text-2xl font-heading text-white">${product.price.toFixed(2)}</p>
-                      <div className="flex items-center gap-2">
-                        <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                        <span className="text-white/90">{product.rating}</span>
+
+          {error ? (
+            <div className="text-center mt-8 text-red-500">
+              <p>{error}</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="mt-4"
+                variant="outline"
+              >
+                Try Again
+              </Button>
+            </div>
+          ) : isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16">
+              {[...Array(6)].map((_, index) => (
+                <div key={index} className="animate-pulse">
+                  <div className="bg-secondary/50 rounded-xl aspect-square mb-4"></div>
+                  <div className="space-y-3">
+                    <div className="h-6 bg-secondary/50 rounded w-3/4"></div>
+                    <div className="h-4 bg-secondary/50 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16">
+              {featuredProducts.map((product, index) => (
+                <ScrollReveal key={product.id} delay={index * 200}>
+                  <Link 
+                    href={`/products/${product.id}`} 
+                    className="group relative overflow-hidden rounded-xl bg-background shadow-lg transition-transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  >
+                    <div className="aspect-square overflow-hidden">
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        width={800}
+                        height={800}
+                        className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                        priority={index < 3}
+                      />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-4 opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100">
+                      <Badge variant="outline" className="mb-2 border-white/20 text-white bg-white/10 backdrop-blur-sm">
+                        {product.category}
+                      </Badge>
+                      <h3 className="text-xl font-heading mb-1">{product.name}</h3>
+                      <p className="text-sm text-white/80 mb-2">{product.brand}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-lg font-heading">${product.price.toFixed(2)}</p>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                          <span className="text-sm">{product.rating}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              </ScrollReveal>
-            ))}
-          </div>
+                  </Link>
+                </ScrollReveal>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

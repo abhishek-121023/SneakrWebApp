@@ -1001,11 +1001,11 @@ export const getRelatedProducts = (productId: string, limit = 4) => {
     .slice(0, limit)
 }
 
-export const getFeaturedProducts = (limit = 4) => {
+export const getFeaturedProducts = (limit = 4): Product[] => {
   return products
-    .filter((p) => p.rating >= 4.7 || p.isNew)
-    .sort(() => 0.5 - Math.random())
-    .slice(0, limit)
+    .filter(product => product.rating >= 4.7 || product.isNew)
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, limit);
 }
 
 export const getNewArrivals = (limit = 4) => {
@@ -1013,6 +1013,10 @@ export const getNewArrivals = (limit = 4) => {
     .filter((p) => p.isNew)
     .sort((a, b) => new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime())
     .slice(0, limit)
+}
+
+export const getProductById = (id: string): Product | undefined => {
+  return products.find(product => product.id === id);
 }
 
 export const categories = [

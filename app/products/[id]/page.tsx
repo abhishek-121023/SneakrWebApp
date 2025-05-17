@@ -10,21 +10,31 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { products as allProducts, getRelatedProducts } from "@/lib/products"
+import { products as allProducts, getRelatedProducts, getProductById } from "@/lib/products"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
+import { useToast } from "@/components/ui/use-toast"
+import { ARShoeTrial } from "@/components/ar-shoe-trial"
+import { isMobile } from "@/lib/utils"
 
 const products = allProducts
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params)
-  const product = products.find((p) => p.id === resolvedParams.id) || products[0]
   const [selectedSize, setSelectedSize] = useState("")
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
+  const [isAROpen, setIsAROpen] = useState(false)
 
   const { addItem } = useCart()
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
+  const { toast } = useToast()
+
+  const resolvedParams = use(params)
+  const product = getProductById(resolvedParams.id)
+
+  if (!product) {
+    return <div>Product not found</div>
+  }
 
   const isWishlisted = isInWishlist(product.id)
 
@@ -49,7 +59,26 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   }
 
   const handleAddToCart = () => {
+    if (!selectedSize) {
+      toast({
+        title: "Please select a size",
+        variant: "destructive",
+      })
+      return
+    }
     addItem(product, selectedSize, quantity)
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart.`,
+    })
+  }
+
+  const handleAddToWishlist = () => {
+    toggleWishlist(false)
+    toast({
+      title: "Added to wishlist",
+      description: `${product.name} has been added to your wishlist.`,
+    })
   }
 
   const relatedProducts = getRelatedProducts(resolvedParams.id, 4)
@@ -59,33 +88,25 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
         {/* Product Images */}
         <div className="space-y-4">
-          <div className="overflow-hidden rounded-xl bg-secondary/30">
+          <div className="relative aspect-square overflow-hidden rounded-xl">
             <Image
-              src={product.images?.[selectedImage] || product.image || "/placeholder.svg"}
+              src={product.image}
               alt={product.name}
-              width={600}
-              height={600}
-              className="object-cover w-full aspect-square transition-all duration-300 hover:scale-105"
+              fill
+              className="object-cover"
+              priority
             />
           </div>
-          <div className="flex space-x-2 overflow-auto pb-2">
-            {product.images?.map((image, index) => (
-              <button
-                key={index}
-                className={`relative rounded-lg overflow-hidden flex-shrink-0 w-20 h-20 transition-all duration-200 ${
-                  selectedImage === index
-                    ? "border-2 border-primary ring-2 ring-primary/20"
-                    : "border-2 border-transparent hover:border-primary/50"
-                }`}
-                onClick={() => setSelectedImage(index)}
-              >
+          <div className="grid grid-cols-4 gap-4">
+            {(product.images ?? []).map((image, index) => (
+              <div key={index} className="relative aspect-square overflow-hidden rounded-lg">
                 <Image
-                  src={image || "/placeholder.svg"}
-                  alt={`${product.name} - View ${index + 1}`}
+                  src={image}
+                  alt={`${product.name} ${index + 1}`}
                   fill
                   className="object-cover"
                 />
-              </button>
+              </div>
             ))}
           </div>
         </div>
@@ -101,7 +122,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => toggleWishlist(true)}
+                  onClick={handleAddToWishlist}
                   className={`hover:bg-primary/10 ${isWishlisted ? "text-primary" : ""}`}
                 >
                   <Heart className={`h-5 w-5 ${isWishlisted ? "fill-primary text-primary" : ""}`} />
@@ -190,28 +211,47 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 variant="outline"
                 size="lg"
                 className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                onClick={() => toggleWishlist(false)}
+                onClick={handleAddToWishlist}
               >
                 <Heart className={`mr-2 h-5 w-5 ${isWishlisted ? "fill-primary" : ""}`} />
                 {isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
               </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                onClick={() => {
+                  if (isMobile()) {
+                    setIsAROpen(true)
+                  } else {
+                    toast({
+                      title: "AR View Not Available",
+                      description: "AR view is only available on mobile devices.",
+                      variant: "destructive",
+                    })
+                  }
+                }}
+              >
+                <span className="mr-2">👟</span>
+                Try AR View
+              </Button>
             </div>
-          </div>
 
-          <Separator className="bg-muted" />
+            <Separator className="bg-muted" />
 
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-success" />
-              <span className="text-sm">In Stock - Ready to Ship</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full border border-muted" />
-              <span className="text-sm text-muted-foreground">Free Shipping on Orders Over $100</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full border border-muted" />
-              <span className="text-sm text-muted-foreground">30-Day Returns</span>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 rounded-full bg-success" />
+                <span className="text-sm">In Stock - Ready to Ship</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 rounded-full border border-muted" />
+                <span className="text-sm text-muted-foreground">Free Shipping on Orders Over $100</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 rounded-full border border-muted" />
+                <span className="text-sm text-muted-foreground">30-Day Returns</span>
+              </div>
             </div>
           </div>
         </div>
@@ -334,6 +374,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           ))}
         </div>
       </div>
+
+      {isMobile() && (
+        <ARShoeTrial
+          productId={product.id}
+          productName={product.name}
+          modelUrl={`/models/${product.id}.glb`}
+          isOpen={isAROpen}
+          onClose={() => setIsAROpen(false)}
+        />
+      )}
     </div>
   )
 }
