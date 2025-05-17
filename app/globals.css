@@ -1,0 +1,371 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* New gradient-inspired color scheme */
+    --background: 220 20% 97%;
+    --foreground: 220 45% 18%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 45% 18%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 45% 18%;
+
+    /* Vibrant red-orange as primary - inspired by popular sneaker colorways */
+    --primary: 16 90% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Subtle dark blue-gray as secondary */
+    --secondary: 215 25% 27%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 220 15% 94%;
+    --muted-foreground: 220 15% 45%;
+
+    --accent: 16 90% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+
+    --border: 220 13% 90%;
+    --input: 220 13% 90%;
+    --ring: 16 90% 50%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 220 45% 13%;
+    --foreground: 220 15% 94%;
+
+    --card: 220 45% 15%;
+    --card-foreground: 220 15% 94%;
+
+    --popover: 220 45% 15%;
+    --popover-foreground: 220 15% 94%;
+
+    --primary: 16 90% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 215 25% 27%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 220 25% 20%;
+    --muted-foreground: 220 15% 65%;
+
+    --accent: 16 90% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+
+    --border: 220 25% 20%;
+    --input: 220 25% 20%;
+    --ring: 16 90% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s ease-out forwards;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Custom Styles */
+.product-card {
+  @apply relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg;
+  background: linear-gradient(to bottom, hsl(var(--card)), hsl(var(--card)));
+}
+
+.product-card:hover .product-image {
+  @apply scale-105;
+}
+
+.product-card:hover .product-actions {
+  @apply opacity-100;
+}
+
+.product-image {
+  @apply transition-transform duration-500;
+}
+
+.product-actions {
+  @apply absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 transition-opacity duration-300;
+}
+
+.hero-gradient {
+  background: linear-gradient(to right, hsl(16, 90%, 50%), hsl(25, 90%, 45%));
+}
+
+.category-card {
+  @apply relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl;
+}
+
+.category-card::after {
+  content: "";
+  @apply absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-70 transition-opacity duration-300;
+}
+
+.category-card:hover::after {
+  @apply opacity-90;
+}
+
+.category-card:hover img {
+  @apply scale-105;
+}
+
+.glass-card {
+  @apply rounded-xl bg-white/10 backdrop-blur-md;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(to right, hsl(16, 90%, 50%), hsl(25, 90%, 45%));
+}
+
+.btn-hover-effect {
+  @apply relative overflow-hidden;
+}
+
+.btn-hover-effect::after {
+  content: "";
+  @apply absolute inset-0 -translate-x-full bg-white/20 transition-transform duration-300;
+}
+
+.btn-hover-effect:hover::after {
+  @apply translate-x-0;
+}
+
+/* Improved Form Elements */
+input,
+select,
+textarea {
+  @apply bg-secondary border-input focus:border-primary focus:ring-1 focus:ring-primary;
+}
+
+/* Improved Buttons */
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all duration-300;
+}
+
+.btn-outline {
+  @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-all duration-300;
+}
+
+/* Product Grid Layout */
+.product-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6;
+}
+
+/* Improved Navigation */
+.nav-link {
+  @apply relative text-foreground/80 hover:text-foreground transition-colors duration-200;
+}
+
+.nav-link::after {
+  content: "";
+  @apply absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300;
+}
+
+.nav-link:hover::after {
+  @apply w-full;
+}
+
+/* Badge Styles */
+.badge-new {
+  @apply bg-primary text-primary-foreground;
+}
+
+.badge-sale {
+  @apply bg-destructive text-destructive-foreground;
+}
+
+.badge-out-of-stock {
+  @apply bg-muted text-muted-foreground;
+}
+
+/* Price Display */
+.price {
+  @apply font-bold text-lg;
+}
+
+.price-sale {
+  @apply text-destructive;
+}
+
+.price-original {
+  @apply line-through text-muted-foreground text-sm;
+}
+
+/* Rating Stars */
+.rating-stars {
+  @apply flex items-center;
+}
+
+.star-filled {
+  @apply text-yellow-400 fill-yellow-400;
+}
+
+.star-empty {
+  @apply text-gray-300;
+}
+
+/* Improved Footer */
+.footer-heading {
+  @apply text-lg font-semibold mb-4 text-foreground;
+}
+
+.footer-link {
+  @apply text-muted-foreground hover:text-foreground transition-colors duration-200;
+}
+
+/* Improved Section Spacing */
+.section {
+  @apply py-12 md:py-20;
+}
+
+.section-title {
+  @apply text-3xl font-bold mb-8 text-center;
+}
+
+.section-subtitle {
+  @apply text-xl text-muted-foreground mb-12 text-center max-w-2xl mx-auto;
+}
+
+/* Typography Styles */
+h1,
+h2,
+h3,
+.brand-text {
+  @apply font-heading tracking-wide;
+}
+
+h1 {
+  @apply text-4xl md:text-5xl lg:text-6xl;
+}
+
+h2 {
+  @apply text-3xl md:text-4xl;
+}
+
+h3 {
+  @apply text-2xl md:text-3xl;
+}
+
+.brand-logo {
+  @apply font-heading text-2xl md:text-3xl tracking-wider;
+}
+
+.nav-text {
+  @apply font-sans font-medium tracking-wide uppercase text-sm;
+}
+
+.product-title {
+  @apply font-heading text-xl tracking-wide;
+}
+
+.section-title {
+  @apply font-heading text-3xl md:text-4xl tracking-wide text-center;
+}
+
+.price-text {
+  @apply font-heading text-xl md:text-2xl;
+}
+
+.button-text {
+  @apply font-sans font-medium uppercase tracking-wider text-sm;
+}
+
+/* Improved Buttons with Typography */
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 uppercase tracking-wider font-medium;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all duration-300 uppercase tracking-wider font-medium;
+}
+
+.btn-outline {
+  @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-all duration-300 uppercase tracking-wider font-medium;
+}
