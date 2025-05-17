@@ -18,30 +18,57 @@ export function ARShoeTrial({ productId, productName, modelUrl, isOpen, onClose 
   const [isLoading, setIsLoading] = useState(true)
   const [hasPermission, setHasPermission] = useState(false)
   const [arSupported, setArSupported] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string>("")
   const sceneRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Check if device supports WebXR
-    if (typeof window !== 'undefined') {
-      if (navigator.xr) {
-        navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-          setArSupported(supported)
-        })
-      } else {
+    const checkARSupport = async () => {
+      try {
+        // Check if running on mobile
+        if (!isMobile()) {
+          setErrorMessage("AR view is only available on mobile devices")
+          setArSupported(false)
+          return
+        }
+
+        // Check if browser supports WebXR
+        if (!navigator.xr) {
+          setErrorMessage("Your browser doesn't support AR. Please try Chrome on Android or Safari on iOS")
+          setArSupported(false)
+          return
+        }
+
+        // Check if AR is supported
+        const isSupported = await navigator.xr.isSessionSupported('immersive-ar')
+        setArSupported(isSupported)
+        if (!isSupported) {
+          setErrorMessage("Your device doesn't support AR capabilities")
+        }
+      } catch (error) {
+        console.error('Error checking AR support:', error)
+        setErrorMessage("Unable to check AR support. Please ensure you're using a compatible browser")
         setArSupported(false)
       }
     }
+
+    checkARSupport()
   }, [])
 
   useEffect(() => {
-    if (!isOpen || !sceneRef.current) return
+    if (!isOpen || !sceneRef.current || !arSupported) return
 
     const initAR = async () => {
       try {
         // Request camera permission
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          } 
+        })
         setHasPermission(true)
-        stream.getTracks().forEach(track => track.stop()) // Stop the stream as AR.js will handle it
+        stream.getTracks().forEach(track => track.stop())
 
         // Initialize AR scene
         const { Scene, WebGLRenderer, PerspectiveCamera, AmbientLight, DirectionalLight } = await import('three')
@@ -113,15 +140,12 @@ export function ARShoeTrial({ productId, productName, modelUrl, isOpen, onClose 
       } catch (error) {
         console.error('Error initializing AR:', error)
         setHasPermission(false)
+        setErrorMessage("Camera permission is required for AR experience")
       }
     }
 
     initAR()
-  }, [isOpen, modelUrl])
-
-  if (!isMobile()) {
-    return null
-  }
+  }, [isOpen, arSupported, modelUrl])
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -133,9 +157,19 @@ export function ARShoeTrial({ productId, productName, modelUrl, isOpen, onClose 
         <div className="relative w-full h-full">
           {!arSupported && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-              <p className="text-center p-4">
-                AR is not supported on your device. Please try using a device with AR capabilities.
-              </p>
+              <div className="text-center p-4">
+                <p className="text-lg font-semibold mb-2">AR Not Available</p>
+                <p className="text-muted-foreground">{errorMessage}</p>
+                <p className="mt-4 text-sm">
+                  Requirements:
+                  <br />• Chrome on Android or Safari on iOS
+                  <br />• Device with AR capabilities
+                  <br />• Camera permission enabled
+                </p>
+                <Button onClick={onClose} className="mt-4">
+                  Close
+                </Button>
+              </div>
             </div>
           )}
 
@@ -143,14 +177,18 @@ export function ARShoeTrial({ productId, productName, modelUrl, isOpen, onClose 
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
               <div className="text-center p-4">
                 <p className="mb-4">Camera permission is required for AR experience.</p>
-                <Button onClick={() => navigator.mediaDevices.getUserMedia({ video: true })}>
+                <Button onClick={() => {
+                  navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(() => setHasPermission(true))
+                    .catch(() => setErrorMessage("Camera permission denied"))
+                }}>
                   Grant Permission
                 </Button>
               </div>
             </div>
           )}
 
-          {isLoading && hasPermission && (
+          {isLoading && hasPermission && arSupported && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
               <p>Loading AR experience...</p>
             </div>
