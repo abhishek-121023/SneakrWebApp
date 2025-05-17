@@ -1,9 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { createContext, useContext, useEffect, useState } from "react"
-import { toast } from "@/components/ui/use-toast"
+import { createContext, useContext, useEffect, useLayoutEffect, useState, useCallback } from "react"
 import type { Product } from "@/lib/products"
 
 export type CartItem = {
@@ -19,7 +17,7 @@ export type CartItem = {
 type CartContextType = {
   items: CartItem[]
   itemCount: number
-  addItem: (product: Product, size: string, quantity: number) => void
+  addItem: (product: Product, size: string, quantity: number) => boolean
   updateQuantity: (id: string, size: string, quantity: number) => void
   removeItem: (id: string, size: string) => void
   clearCart: () => void
@@ -28,15 +26,22 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
+const MAX_QUANTITY_PER_ITEM = 10
+const MIN_QUANTITY = 1
+
+// Use this for SSR to avoid hydration mismatch
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
 
-  // Load cart from localStorage on initial render
-  useEffect(() => {
+  // Load cart from localStorage only on client-side
+  useIsomorphicLayoutEffect(() => {
     const storedCart = localStorage.getItem("cart")
     if (storedCart) {
       try {
-        setItems(JSON.parse(storedCart))
+        const parsedCart = JSON.parse(storedCart)
+        setItems(parsedCart)
       } catch (error) {
         console.error("Failed to parse cart from localStorage:", error)
       }
@@ -44,108 +49,87 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(items))
+  useIsomorphicLayoutEffect(() => {
+    if (items.length > 0 || localStorage.getItem("cart")) {
+      localStorage.setItem("cart", JSON.stringify(items))
+    }
   }, [items])
 
   const itemCount = items.reduce((total, item) => total + item.quantity, 0)
+  const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0)
 
-  const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0)
+  const validateQuantity = useCallback((quantity: number): number => {
+    return Math.min(Math.max(Math.round(quantity), MIN_QUANTITY), MAX_QUANTITY_PER_ITEM)
+  }, [])
 
-  const addItem = (product: Product, size: string, quantity: number) => {
+  const addItem = useCallback((product: Product, size: string, quantity: number) => {
     if (!size) {
-      toast({
-        title: "Please select a size",
-        description: "You must select a size before adding to cart",
-        variant: "destructive",
-      })
-      return
+      return false
     }
 
-    setItems((prevItems) => {
-      // Check if the item with the same id and size already exists
-      const existingItemIndex = prevItems.findIndex((item) => item.id === product.id && item.size === size)
+    const validQuantity = validateQuantity(quantity)
+    const existingItemIndex = items.findIndex((item) => item.id === product.id && item.size === size)
 
-      if (existingItemIndex > -1) {
-        // Update quantity if item exists
-        const updatedItems = [...prevItems]
-        updatedItems[existingItemIndex].quantity += quantity
+    if (existingItemIndex > -1) {
+      const currentQuantity = items[existingItemIndex].quantity
+      const newQuantity = validateQuantity(currentQuantity + validQuantity)
 
-        toast({
-          title: "Cart updated",
-          description: `${product.name} quantity updated in your cart`,
-        })
-
-        return updatedItems
-      } else {
-        // Add new item
-        toast({
-          title: "Added to cart",
-          description: `${product.name} has been added to your cart`,
-        })
-
-        return [
-          ...prevItems,
-          {
-            id: product.id,
-            name: product.name,
-            brand: product.brand,
-            price: product.price,
-            size,
-            quantity,
-            image: product.image,
-          },
-        ]
+      if (newQuantity === MAX_QUANTITY_PER_ITEM) {
+        return false
       }
-    })
-  }
 
-  const updateQuantity = (id: string, size: string, quantity: number) => {
-    if (quantity < 1) return
+      setItems((prevItems) => {
+        const updatedItems = [...prevItems]
+        updatedItems[existingItemIndex].quantity = newQuantity
+        return updatedItems
+      })
+    } else {
+      const newItem = {
+        id: product.id,
+        name: product.name,
+        brand: product.brand,
+        price: product.price,
+        size,
+        quantity: validQuantity,
+        image: product.image,
+      }
+
+      setItems((prevItems) => [...prevItems, newItem])
+    }
+    return true
+  }, [items, validateQuantity])
+
+  const updateQuantity = useCallback((id: string, size: string, quantity: number) => {
+    const validQuantity = validateQuantity(quantity)
 
     setItems((prevItems) =>
-      prevItems.map((item) => (item.id === id && item.size === size ? { ...item, quantity } : item)),
+      prevItems.map((item) => 
+        item.id === id && item.size === size 
+          ? { ...item, quantity: validQuantity }
+          : item
+      )
     )
-  }
+  }, [validateQuantity])
 
-  const removeItem = (id: string, size: string) => {
-    setItems((prevItems) => {
-      const itemToRemove = prevItems.find((item) => item.id === id && item.size === size)
+  const removeItem = useCallback((id: string, size: string) => {
+    setItems((prevItems) => prevItems.filter((item) => !(item.id === id && item.size === size)))
+  }, [])
 
-      if (itemToRemove) {
-        toast({
-          title: "Removed from cart",
-          description: `${itemToRemove.name} has been removed from your cart`,
-        })
-      }
-
-      return prevItems.filter((item) => !(item.id === id && item.size === size))
-    })
-  }
-
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setItems([])
-    toast({
-      title: "Cart cleared",
-      description: "All items have been removed from your cart",
-    })
+  }, [])
+
+  const value = {
+    items,
+    itemCount,
+    addItem,
+    updateQuantity,
+    removeItem,
+    clearCart,
+    subtotal,
   }
 
-  return (
-    <CartContext.Provider
-      value={{
-        items,
-        itemCount,
-        addItem,
-        updateQuantity,
-        removeItem,
-        clearCart,
-        subtotal,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  )
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }
 
 export function useCart() {

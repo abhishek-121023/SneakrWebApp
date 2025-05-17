@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, use } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Heart, Minus, Plus, Share2, ShoppingBag, Star } from "lucide-react"
@@ -16,8 +16,9 @@ import { useWishlist } from "@/context/wishlist-context"
 
 const products = allProducts
 
-export default function ProductPage({ params }: { params: { id: string } }) {
-  const product = products.find((p) => p.id === params.id) || products[0]
+export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params)
+  const product = products.find((p) => p.id === resolvedParams.id) || products[0]
   const [selectedSize, setSelectedSize] = useState("")
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
@@ -39,11 +40,11 @@ export default function ProductPage({ params }: { params: { id: string } }) {
     }
   }
 
-  const toggleWishlist = () => {
+  const toggleWishlist = (silent = false) => {
     if (isWishlisted) {
-      removeFromWishlist(product.id)
+      removeFromWishlist(product.id, silent)
     } else {
-      addToWishlist(product)
+      addToWishlist(product, silent)
     }
   }
 
@@ -51,7 +52,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
     addItem(product, selectedSize, quantity)
   }
 
-  const relatedProducts = getRelatedProducts(params.id, 4)
+  const relatedProducts = getRelatedProducts(resolvedParams.id, 4)
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-16">
@@ -100,7 +101,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={toggleWishlist}
+                  onClick={() => toggleWishlist(true)}
                   className={`hover:bg-primary/10 ${isWishlisted ? "text-primary" : ""}`}
                 >
                   <Heart className={`h-5 w-5 ${isWishlisted ? "fill-primary text-primary" : ""}`} />
@@ -189,7 +190,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 variant="outline"
                 size="lg"
                 className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                onClick={toggleWishlist}
+                onClick={() => toggleWishlist(false)}
               >
                 <Heart className={`mr-2 h-5 w-5 ${isWishlisted ? "fill-primary" : ""}`} />
                 {isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}

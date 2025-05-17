@@ -20,6 +20,7 @@ export default function ProductsPage() {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([])
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [sortOption, setSortOption] = useState("featured")
+  const [searchQuery, setSearchQuery] = useState("")
 
   const toggleBrand = (brand: string) => {
     setSelectedBrands((prev) => (prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]))
@@ -40,7 +41,11 @@ export default function ProductsPage() {
     const matchesPriceRange = product.price >= priceRange[0] && product.price <= priceRange[1]
     const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(product.brand)
     const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category)
-    return matchesPriceRange && matchesBrand && matchesCategory
+    const matchesSearch = searchQuery === "" || 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesPriceRange && matchesBrand && matchesCategory && matchesSearch
   })
 
   // Sort products based on selected sort option
@@ -143,7 +148,7 @@ export default function ProductsPage() {
                       >
                         Reset All
                       </Button>
-                      <Button>Apply Filters</Button>
+                      <Button onClick={() => {}}>Apply Filters</Button>
                     </div>
                   </div>
                 </SheetContent>
@@ -153,11 +158,13 @@ export default function ProductsPage() {
                 <Input
                   placeholder="Search sneakers..."
                   className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2">
               <SlidersHorizontal className="h-4 w-4 text-gray-500" />
               <Select value={sortOption} onValueChange={setSortOption}>
                 <SelectTrigger className="w-full sm:w-[180px]">
@@ -174,41 +181,41 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {sortedProducts.map((product) => (
-              <Link key={product.id} href={`/products/${product.id}`} className="group">
-                <div className="relative overflow-hidden rounded-lg">
-                  <Image
-                    src={product.image || "/placeholder.svg"}
-                    alt={product.name}
-                    width={400}
-                    height={400}
-                    className="object-cover w-full aspect-square group-hover:scale-105 transition-transform duration-300"
-                  />
-                  {product.isNew && <Badge className="absolute top-2 right-2 bg-black text-white">New</Badge>}
-                </div>
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-lg group-hover:underline">{product.name}</h3>
-                    <div className="flex items-center">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="ml-1 text-sm text-gray-600">{product.rating}</span>
+          {sortedProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
+              {sortedProducts.map((product) => (
+                <Link key={product.id} href={`/products/${product.id}`} className="group">
+                  <div className="relative overflow-hidden rounded-lg">
+                    <Image
+                      src={product.image || "/placeholder.svg"}
+                      alt={product.name}
+                      width={400}
+                      height={400}
+                      className="object-cover w-full aspect-square group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {product.isNew && <Badge className="absolute top-2 right-2 bg-black text-white">New</Badge>}
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-lg group-hover:underline">{product.name}</h3>
+                      <div className="flex items-center">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="ml-1 text-sm text-gray-600">{product.rating}</span>
+                      </div>
+                    </div>
+                    <p className="text-gray-500">{product.brand}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold">${product.price.toFixed(2)}</p>
+                      <Button size="sm" variant="ghost" className="rounded-full p-0 w-9 h-9">
+                        <ShoppingBag className="h-4 w-4" />
+                        <span className="sr-only">Add to cart</span>
+                      </Button>
                     </div>
                   </div>
-                  <p className="text-gray-500">{product.brand}</p>
-                  <div className="flex items-center justify-between">
-                    <p className="font-bold">${product.price.toFixed(2)}</p>
-                    <Button size="sm" variant="ghost" className="rounded-full p-0 w-9 h-9">
-                      <ShoppingBag className="h-4 w-4" />
-                      <span className="sr-only">Add to cart</span>
-                    </Button>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          {sortedProducts.length === 0 && (
+                </Link>
+              ))}
+            </div>
+          ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <h3 className="text-xl font-semibold">No products found</h3>
               <p className="text-gray-500 mt-2">Try adjusting your filters or search criteria</p>
@@ -219,6 +226,7 @@ export default function ProductsPage() {
                   setPriceRange([0, 300])
                   setSelectedBrands([])
                   setSelectedCategories([])
+                  setSearchQuery("")
                 }}
               >
                 Reset All Filters

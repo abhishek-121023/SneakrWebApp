@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { toast } from "@/components/ui/use-toast"
 import type { Product } from "@/lib/products"
 
@@ -17,8 +17,8 @@ export type WishlistItem = {
 type WishlistContextType = {
   items: WishlistItem[]
   itemCount: number
-  addItem: (product: Product) => void
-  removeItem: (id: string) => void
+  addItem: (product: Product, silent?: boolean) => void
+  removeItem: (id: string, silent?: boolean) => void
   clearWishlist: () => void
   isInWishlist: (id: string) => boolean
 }
@@ -47,73 +47,72 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   const itemCount = items.length
 
-  const isInWishlist = (id: string) => {
+  const isInWishlist = useCallback((id: string) => {
     return items.some((item) => item.id === id)
-  }
+  }, [items])
 
-  const addItem = (product: Product) => {
+  const addItem = useCallback((product: Product, silent = false) => {
     if (isInWishlist(product.id)) {
-      toast({
-        title: "Already in wishlist",
-        description: `${product.name} is already in your wishlist`,
-      })
+      if (!silent) {
+        toast({
+          title: "Already in wishlist",
+          description: `${product.name} is already in your wishlist`,
+        })
+      }
       return
     }
 
-    setItems((prevItems) => [
-      ...prevItems,
-      {
-        id: product.id,
-        name: product.name,
-        brand: product.brand,
-        price: product.price,
-        image: product.image,
-      },
-    ])
+    const newItem = {
+      id: product.id,
+      name: product.name,
+      brand: product.brand,
+      price: product.price,
+      image: product.image,
+    }
 
-    toast({
-      title: "Added to wishlist",
-      description: `${product.name} has been added to your wishlist`,
-    })
-  }
+    setItems((prevItems) => [...prevItems, newItem])
 
-  const removeItem = (id: string) => {
-    setItems((prevItems) => {
-      const itemToRemove = prevItems.find((item) => item.id === id)
+    if (!silent) {
+      toast({
+        title: "Added to wishlist",
+        description: `${product.name} has been added to your wishlist`,
+      })
+    }
+  }, [isInWishlist])
 
-      if (itemToRemove) {
-        toast({
-          title: "Removed from wishlist",
-          description: `${itemToRemove.name} has been removed from your wishlist`,
-        })
-      }
+  const removeItem = useCallback((id: string, silent = false) => {
+    const itemToRemove = items.find((item) => item.id === id)
+    
+    if (!itemToRemove) return
 
-      return prevItems.filter((item) => item.id !== id)
-    })
-  }
+    setItems((prevItems) => prevItems.filter((item) => item.id !== id))
 
-  const clearWishlist = () => {
+    if (!silent && itemToRemove) {
+      toast({
+        title: "Removed from wishlist",
+        description: `${itemToRemove.name} has been removed from your wishlist`,
+      })
+    }
+  }, [items])
+
+  const clearWishlist = useCallback(() => {
     setItems([])
     toast({
       title: "Wishlist cleared",
       description: "All items have been removed from your wishlist",
     })
+  }, [])
+
+  const value = {
+    items,
+    itemCount,
+    addItem,
+    removeItem,
+    clearWishlist,
+    isInWishlist,
   }
 
-  return (
-    <WishlistContext.Provider
-      value={{
-        items,
-        itemCount,
-        addItem,
-        removeItem,
-        clearWishlist,
-        isInWishlist,
-      }}
-    >
-      {children}
-    </WishlistContext.Provider>
-  )
+  return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>
 }
 
 export function useWishlist() {
